@@ -1,0 +1,25 @@
+# segredos: chaves de API e senhas nunca vão para o git (só o modelo, sem valores)
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# artefatos gerados em tempo de execução
+models/*.joblib
+logs/
+.cache/
+
+# editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

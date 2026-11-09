@@ -1,0 +1,48 @@
+[project]
+name = "copiloto-do-dono"
+version = "0.1.0"
+description = "Agente de IA que responde perguntas do dono de restaurante sobre o próprio negócio."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.162.2",
+    "holidays>=0.60",
+    "httpx>=0.28.1",
+    "numpy>=2.1",
+    "openai>=3.46.0",
+    "pandas>=2.2",
+    "psycopg[binary]>=3.2",
+    "pydantic-settings>=2.6",
+    "pyyaml>=6.0.3",
+    "scikit-learn>=1.9.1",
+    "sqlglot>=30.30.0",
+    "streamlit>=1.67.0",
+    "tzdata>=2024.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/copiloto"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]  # acentos e travessões em textos PT-BR são intencionais
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["db: precisa de um PostgreSQL rodando (docker compose up -d db)"]
