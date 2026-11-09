@@ -1,0 +1,84 @@
+{
+  "name": "demand_v1_2026-11-08",
+  "version": "v1",
+  "trained_on": "2026-11-08",
+  "data_start": "2026-05-01",
+  "data_end": "2026-10-31",
+  "target": "pedidos concluídos por dia e faixa (almoco, tarde, jantar)",
+  "selected": "poisson_glm",
+  "description": "regressão de Poisson com um nível por dia da semana × faixa, tendência e calendário (feriados, véspera, datas comemorativas, dia de pagamento, fim de mês)",
+  "features": [
+    "weekday_slot",
+    "trend",
+    "is_month_end",
+    "is_payday",
+    "is_holiday",
+    "is_holiday_eve",
+    "is_commemorative"
+  ],
+  "trend_origin": "2026-05-01",
+  "closed_weekdays": [
+    0
+  ],
+  "train_rows": 402,
+  "mae": {
+    "baseline": 6.083,
+    "modelo": 4.874
+  },
+  "mae_backtest_medio": {
+    "baseline": 5.865,
+    "gbr": 6.205,
+    "poisson_glm": 6.115
+  },
+  "backtest": [
+    {
+      "fold": "2026-08",
+      "start": "2026-08-01",
+      "end": "2026-08-31",
+      "rows": 78,
+      "mae": {
+        "baseline": 5.811,
+        "gbr": 6.119,
+        "poisson_glm": 7.385
+      },
+      "mae_special_days": {
+        "baseline": 7.917,
+        "gbr": 8.922,
+        "poisson_glm": 38.821
+      }
+    },
+    {
+      "fold": "2026-09",
+      "start": "2026-09-01",
+      "end": "2026-09-30",
+      "rows": 78,
+      "mae": {
+        "baseline": 5.692,
+        "gbr": 6.438,
+        "poisson_glm": 6.133
+      },
+      "mae_special_days": {
+        "baseline": 1.333,
+        "gbr": 1.992,
+        "poisson_glm": 1.357
+      }
+    },
+    {
+      "fold": "2026-10",
+      "start": "2026-10-01",
+      "end": "2026-10-31",
+      "rows": 81,
+      "mae": {
+        "baseline": 6.083,
+        "gbr": 6.063,
+        "poisson_glm": 4.874
+      },
+      "mae_special_days": {
+        "baseline": 3.667,
+        "gbr": 6.33,
+        "poisson_glm": 4.351
+      }
+    }
+  ],
+  "sklearn": "1.9.1"
+}
