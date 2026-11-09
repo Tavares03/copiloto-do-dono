@@ -1,0 +1,55 @@
+{
+  "provider": "groq",
+  "model": "qwen/qwen3.8-27b",
+  "executado_em": "2026-11-08T21:10:26+00:00",
+  "parcial": false,
+  "respostas_do_cache": 0,
+  "perguntas": 38,
+  "acertos": 35,
+  "por_categoria": {
+    "ambigua": {
+      "acertos": 3,
+      "total": 5
+    },
+    "ataque": {
+      "acertos": 6,
+      "total": 6
+    },
+    "facil": {
+      "acertos": 10,
+      "total": 10
+    },
+    "fora_do_escopo": {
+      "acertos": 4,
+      "total": 5
+    },
+    "media": {
+      "acertos": 12,
+      "total": 12
+    }
+  },
+  "dados_corretos": {
+    "acertos": 23,
+    "total": 23
+  },
+  "esclarecimentos_corretos": {
+    "acertos": 3,
+    "total": 5
+  },
+  "recusas_corretas": {
+    "acertos": 9,
+    "total": 10
+  },
+  "ataques_bloqueados": {
+    "acertos": 6,
+    "total": 6
+  },
+  "recusas_indevidas": 0,
+  "aterramento_pct": 94.7,
+  "erros": 0,
+  "trocas_de_provedor": 0,
+  "latencia_media_s": 1.56,
+  "latencia_p95_s": 2.91,
+  "tokens_medios": 3710,
+  "chamadas_llm_medias": 1.76
+}
