@@ -1,0 +1,84 @@
+{
+  "name": "Copiloto do Dono - WhatsApp",
+  "nodes": [
+    {
+      "id": "a1",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": { "updates": ["messages"] },
+      "credentials": { "whatsAppTriggerApi": { "id": "1", "name": "WhatsApp OAuth" } }
+    },
+    {
+      "id": "a2",
+      "name": "Só mensagens de texto",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [220, 0],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.messages?.[0]?.type }}",
+              "rightValue": "text",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a3",
+      "name": "Perguntar ao Copiloto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0],
+      "onError": "continueRegularOutput",
+      "notes": "Troque a URL se a API não estiver em host.docker.internal:8000. O segredo fica na credencial Header Auth (nome X-Webhook-Secret, valor = WEBHOOK_SECRET do .env).",
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/webhook/whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "from", "value": "={{ $json.messages[0].from }}" },
+            { "name": "message", "value": "={{ $json.messages[0].text.body }}" }
+          ]
+        },
+        "options": { "timeout": 120000 }
+      },
+      "credentials": { "httpHeaderAuth": { "id": "2", "name": "Copiloto - segredo do webhook" } }
+    },
+    {
+      "id": "a4",
+      "name": "Responder no WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [660, 0],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.reply ?? 'Não consegui responder agora. Tente de novo em alguns minutos.' }}",
+        "additionalFields": {}
+      },
+      "credentials": { "whatsAppApi": { "id": "3", "name": "WhatsApp API" } }
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": { "main": [[{ "node": "Só mensagens de texto", "type": "main", "index": 0 }]] },
+    "Só mensagens de texto": { "main": [[{ "node": "Perguntar ao Copiloto", "type": "main", "index": 0 }]] },
+    "Perguntar ao Copiloto": { "main": [[{ "node": "Responder no WhatsApp", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

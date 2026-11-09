@@ -1,0 +1,50 @@
+{
+  "name": "Copiloto do Dono - Resumo diário",
+  "nodes": [
+    {
+      "id": "b1",
+      "name": "Todo dia às 8h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 8 * * *" }] }
+      }
+    },
+    {
+      "id": "b2",
+      "name": "Buscar resumo de ontem",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "notes": "Números calculados pelo Copiloto; o LLM só redige (com verificação). Se nenhum LLM responder, vem o texto do template.",
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/daily-summary",
+        "options": { "timeout": 120000 }
+      }
+    },
+    {
+      "id": "b3",
+      "name": "Enviar ao dono",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [440, 0],
+      "notes": "Troque pelo ID do seu número no WhatsApp Business e pelo telefone do dono. Fora da janela de 24h da Cloud API, a Meta exige um template aprovado.",
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumberId": "SEU_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "5561999999999",
+        "textBody": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "credentials": { "whatsAppApi": { "id": "3", "name": "WhatsApp API" } }
+    }
+  ],
+  "connections": {
+    "Todo dia às 8h": { "main": [[{ "node": "Buscar resumo de ontem", "type": "main", "index": 0 }]] },
+    "Buscar resumo de ontem": { "main": [[{ "node": "Enviar ao dono", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "America/Sao_Paulo" }
+}
