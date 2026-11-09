@@ -1,0 +1,38 @@
+# Usa um Postgres que já roda na máquina, compartilhado entre projetos, no lugar do serviço "db"
+# do docker-compose.yml. Padrão esperado: container "postgres" na rede docker "dev-network",
+# usuário/senha postgres/postgres e um banco por projeto (este usa "copiloto", criado pelo init).
+#
+# Para ativar, ponha no .env (o docker compose lê COMPOSE_FILE de lá):
+#   COMPOSE_FILE=docker-compose.yml;docker-compose.postgres-compartilhado.yml
+#   COMPOSE_PATH_SEPARATOR=;
+#   DB_PORT=5432
+#   DB_ADMIN_USER=postgres
+#   DB_ADMIN_PASSWORD=postgres
+#
+# O Postgres compartilhado tem o próprio docker-compose e precisa estar no ar antes.
+
+x-shared-db: &shared-db
+  environment:
+    DB_HOST: postgres
+    DB_PORT: "5432"
+  networks:
+    - default
+    - dev-network
+
+services:
+  db:
+    profiles: ["banco-proprio"]  # desligado: o banco é o compartilhado
+
+  init:
+    <<: *shared-db
+    depends_on: !reset {}
+
+  api:
+    <<: *shared-db
+
+  ui:
+    <<: *shared-db
+
+networks:
+  dev-network:
+    external: true

@@ -45,4 +45,4 @@ ignore = ["RUF001", "RUF002", "RUF003"]  # acentos e travessões em textos PT-BR
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["db: precisa de um PostgreSQL rodando (docker compose up -d db)"]
+markers = ["db: precisa de um PostgreSQL rodando (docker compose up -d db ou o compartilhado)"]
