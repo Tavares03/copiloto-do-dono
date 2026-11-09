@@ -2,6 +2,7 @@ from datetime import date
 
 import psycopg
 import pytest
+from psycopg import sql
 
 from copiloto.config import Settings
 from copiloto.data import setup
@@ -34,6 +35,26 @@ def test_loads_every_row(seeded: setup.SetupReport, db_settings: Settings, data:
         "orders": len(data.orders),
         "order_items": len(data.order_items),
     }
+
+
+def _drop_database(settings: Settings) -> None:
+    with psycopg.connect(settings.conninfo(dbname="postgres"), autocommit=True) as conn:
+        name = sql.Identifier(settings.db_name)
+        conn.execute(sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(name))
+
+
+def test_creates_the_database_when_missing(db_settings: Settings):
+    """Num Postgres compartilhado por vários projetos o banco não vem pronto (sem POSTGRES_DB)."""
+    settings = db_settings.model_copy(update={"db_name": "copiloto_test_vazio"})
+    _drop_database(settings)
+    try:
+        assert setup.ensure_database(settings) is True
+        assert setup.ensure_database(settings) is False  # já existe: não mexe
+
+        with connect(settings) as conn:
+            assert conn.execute("SELECT current_database()").fetchone()[0] == settings.db_name
+    finally:
+        _drop_database(settings)
 
 
 def test_running_again_keeps_existing_data(seeded: setup.SetupReport, db_settings: Settings):

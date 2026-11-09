@@ -33,7 +33,10 @@ def db_settings() -> Settings:
             conn.execute(sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(name))
             conn.execute(sql.SQL("CREATE DATABASE {}").format(name))
     except psycopg.OperationalError as exc:
-        message = f"Postgres indisponível ({exc}). Suba com: docker compose up -d db"
+        message = (
+            f"Postgres indisponível ({exc}). Suba com: docker compose up -d db "
+            "(ou o Postgres compartilhado, se o .env apontar para ele)"
+        )
         if os.environ.get("REQUIRE_DB") == "1":
             pytest.fail(message)
         pytest.skip(message)

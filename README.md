@@ -67,6 +67,12 @@ pedidos, seed fixa) e treina o modelo de previsão — cerca de 2 minutos no tot
 Nas próximas, tudo já existe e sobe em segundos. Portas ocupadas? Ajuste `API_PORT`/`UI_PORT` no
 `.env`.
 
+**Já tem um Postgres compartilhado entre projetos?** O compose sobe um Postgres próprio por padrão,
+mas pode usar um que já rode em outro container (nome `postgres`, rede docker `dev-network`):
+descomente `COMPOSE_FILE` e `COMPOSE_PATH_SEPARATOR` no `.env` e aponte `DB_PORT`/`DB_ADMIN_*`
+para ele. O `init` cria o banco `copiloto` e o usuário somente leitura do agente nesse servidor
+(detalhes em [`docker-compose.postgres-compartilhado.yml`](docker-compose.postgres-compartilhado.yml)).
+
 > Os dados são sintéticos e o "hoje" do sistema é fixo em **01/11/2026** (`COPILOTO_TODAY`),
 > para que *"quanto vendi ontem?"* e as evals sejam reproduzíveis em qualquer máquina.
 
@@ -286,8 +292,8 @@ aprovado para iniciar conversa — o resumo diário precisa de um.
 
 ```bash
 uv sync                                    # dependências (inclui as de dev)
-docker compose up -d db                    # só o banco
-uv run python -m copiloto.data.setup       # schema + dados (idempotente; --reset recria)
+docker compose up -d db                    # só o banco (pule se usar o Postgres compartilhado)
+uv run python -m copiloto.data.setup       # banco + schema + dados (idempotente; --reset recria)
 uv run python -m copiloto.ml.train         # treina e mostra o backtest
 uv run python -m copiloto.cli -v "quanto vendi ontem?"   # -v mostra o "por dentro"
 uv run python -m copiloto.summary          # resumo de ontem
@@ -295,7 +301,7 @@ uv run uvicorn copiloto.api.main:app --reload
 uv run streamlit run ui/app.py
 ```
 
-Testes (**276**, nenhum chama LLM de verdade — provedores falsos atrás do SDK real da OpenAI) e
+Testes (**277**, nenhum chama LLM de verdade — provedores falsos atrás do SDK real da OpenAI) e
 qualidade, iguais ao CI:
 
 ```bash
@@ -329,7 +335,7 @@ ui/                 Streamlit (chat + observabilidade)
 evals/              dataset.yaml e resultados das rodadas
 models/             métricas dos modelos (.json); o .joblib é gerado no treino
 docs/               plano, fluxos do N8N, imagens
-tests/              276 testes (unitários + integração com Postgres)
+tests/              277 testes (unitários + integração com Postgres)
 ```
 </details>
 

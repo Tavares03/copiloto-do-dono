@@ -1,4 +1,5 @@
-"""Prepara o banco: aplica o schema, cria o usuário somente leitura e carrega os dados.
+"""Prepara o banco: cria o banco se faltar, aplica o schema, cria o usuário somente leitura e
+carrega os dados.
 
 Idempotente: rodar de novo não duplica nada. Uso:
 
@@ -31,6 +32,21 @@ class SetupReport:
     seeded: bool  # True se os dados foram carregados nesta execução
     orders: int
     order_items: int
+
+
+def ensure_database(settings: Settings) -> bool:
+    """Cria o banco do projeto se ele ainda não existir. True se criou agora.
+
+    No Postgres próprio do docker-compose o banco já nasce pronto (POSTGRES_DB); num servidor
+    compartilhado por vários projetos, não.
+    """
+    with psycopg.connect(settings.conninfo(dbname="postgres"), autocommit=True) as conn:
+        exists = conn.execute(
+            "SELECT 1 FROM pg_database WHERE datname = %s", (settings.db_name,)
+        ).fetchone()
+        if not exists:
+            conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(settings.db_name)))
+    return not exists
 
 
 def drop_schemas(conn: psycopg.Connection) -> None:
@@ -108,6 +124,7 @@ def run(
     def default_data() -> SyntheticData:
         return generate(seed=settings.data_seed, start=settings.data_start, end=settings.data_end)
 
+    ensure_database(settings)
     with connect(settings) as conn:
         if reset:
             drop_schemas(conn)
