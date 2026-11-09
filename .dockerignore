@@ -1,0 +1,17 @@
+# segredos nunca entram na imagem: chegam em tempo de execução pelo env_file
+.env
+.env.*
+!.env.example
+
+.git
+.github
+.venv
+.cache
+logs
+models/*.joblib
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+tests
+docs

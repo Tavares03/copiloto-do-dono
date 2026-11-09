@@ -1,0 +1,79 @@
+# Sobe tudo com um comando:   docker compose up --build
+#   db   PostgreSQL
+#   init cria o schema, carrega os dados sintéticos e treina o modelo (só na primeira vez)
+#   api  FastAPI em http://localhost:8000 (docs em /docs)
+#   ui   Streamlit em http://localhost:8501
+name: copiloto-do-dono
+
+x-app: &app
+  build: .
+  image: copiloto-do-dono:local
+  env_file:
+    - path: .env
+      required: false  # sem .env sobe igual; só não haverá LLM até configurar uma chave
+  environment:
+    DB_HOST: db
+    DB_PORT: "5432"
+    API_URL: http://api:8000
+    OLLAMA_BASE_URL: http://host.docker.internal:11434/v1
+  extra_hosts:
+    - "host.docker.internal:host-gateway"  # Ollama rodando na sua máquina
+  volumes:
+    - models:/app/models
+    - logs:/app/logs
+    - llm-cache:/app/.cache
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${DB_ADMIN_USER:-copiloto}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:-copiloto}
+      POSTGRES_DB: ${DB_NAME:-copiloto}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  init:
+    <<: *app
+    command: ["sh", "-c", "python -m copiloto.data.setup && python -m copiloto.ml.train --if-missing"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *app
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    ports:
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 5s
+      timeout: 6s
+      retries: 20
+    restart: unless-stopped
+
+  ui:
+    <<: *app
+    command: ["streamlit", "run", "ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${UI_PORT:-8501}:8501"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  models:
+  logs:
+  llm-cache:

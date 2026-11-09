@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualidade-e-testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: copiloto
+          POSTGRES_PASSWORD: copiloto
+          POSTGRES_DB: copiloto
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U copiloto"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      # sem Postgres os testes de banco falham em vez de serem pulados em silêncio
+      REQUIRE_DB: "1"
+      # nenhuma chave de LLM: os testes usam provedores falsos e nunca chamam um LLM de verdade
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Instalar dependências (lockfile)
+        run: uv sync --frozen
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Formatação (ruff format)
+        run: uv run ruff format --check .
+
+      - name: Testes (pytest)
+        run: uv run pytest -q
